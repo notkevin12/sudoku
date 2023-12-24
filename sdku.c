@@ -38,6 +38,47 @@ void printgrid(digit_t* grid)
     }
 }
 
+int verify(digit_t* grid)
+{
+    static int rowseen[DIGITS + 1];
+    static int colseen[DIGITS + 1];
+    for (int i = 0; i < DIGITS; ++i) {
+        memset(rowseen, 0, sizeof(int) * (DIGITS + 1));
+        memset(colseen, 0, sizeof(int) * (DIGITS + 1));
+        for (int j = 0; j < DIGITS; ++j) {
+            digit_t rowd = grid[i * DIGITS + j];
+            digit_t cold = grid[j * DIGITS + i];
+            if (rowd == 0 || rowseen[rowd]) {
+                printf("Row conflict at (%d %d): %u\n", i, j, rowd);
+                return 0;
+            }
+            if (cold == 0 || colseen[cold]) {
+                printf("Col conflict found at (%d %d): %u\n", j, i, cold);
+                return 0;
+            }
+            rowseen[rowd] = 1;
+            colseen[cold] = 1;
+        }
+    }
+    static int blockseen[DIGITS + 1];
+    for (int block_r = 0; block_r < DIGITS; block_r += BLOCK_DIM) {
+        for (int block_c = 0; block_c < DIGITS; block_c += BLOCK_DIM) {
+            memset(blockseen, 0, sizeof(int) * (DIGITS + 1));
+            for (int i = block_r; i < block_r + BLOCK_DIM; ++i) {
+                for (int j = block_c; j < block_c + BLOCK_DIM; ++j) {
+                    digit_t d = grid[i * DIGITS + j];
+                    if (d == 0 || blockseen[d]) {
+                        printf("Block conflict found at (%d %d): %u\n", i, j, d);
+                        return 0;
+                    }
+                    blockseen[d] = 1;
+                }
+            }
+        }
+    }
+    return 1;
+}
+
 /*
 Updates seen vector for block containing the given point
 Returns number of new digits seen
@@ -138,5 +179,6 @@ int main()
     digit_t grid[DIGITS * DIGITS];
     memset(grid, 0, sizeof(digit_t) * DIGITS * DIGITS);
     printf("Success? %s\n", setcell(grid, 0) ? "true" : "false");
+    printf("Correct? %s\n", verify(grid) ? "true" : "false");
     pprintgrid(grid);
 }
