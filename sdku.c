@@ -135,9 +135,8 @@ int setcell(digit_t* grid, int idx)
 int main()
 {
     srand(time(NULL));
-    digit_t* grid = (digit_t*)malloc(sizeof(digit_t) * (DIGITS * DIGITS));
+    digit_t grid[DIGITS * DIGITS];
     memset(grid, 0, sizeof(digit_t) * DIGITS * DIGITS);
     printf("Success? %s\n", setcell(grid, 0) ? "true" : "false");
     pprintgrid(grid);
-    free((void*)grid);
 }
