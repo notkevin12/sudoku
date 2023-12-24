@@ -3,9 +3,10 @@
 #include <string.h>
 #include <time.h>
 
-#define digit_t unsigned char
 #define DIGITS 9
-#define CELL_DIM 3
+#define BLOCK_DIM 3
+
+typedef unsigned char digit_t;
 
 void printgrid(digit_t* grid)
 {
@@ -17,62 +18,106 @@ void printgrid(digit_t* grid)
     }
 }
 
-/* T if the cell is valid, F otherwise */
-int checkcell(digit_t* grid, int r, int c)
+/*
+Updates seen vector for block containing the given point
+Returns number of new digits seen
+*/
+int checkblock(digit_t* grid, int* seen, int r, int c)
 {
-    int block_r = r / CELL_DIM * CELL_DIM;
-    int block_c = c / CELL_DIM * CELL_DIM;
-    static int seen[DIGITS];
-    memset(seen, DIGITS, 0);
-    for (int i = block_r; i < block_r + CELL_DIM; ++i) {
-        for (int j = block_c; j < block_c + CELL_DIM; ++j) {
-            digit_t d = grid[i * DIGITS + j] - 1;
-            if (seen[d])
-                return 0;
-            seen[d] = 1;
+    int block_r = r / BLOCK_DIM * BLOCK_DIM;
+    int block_c = c / BLOCK_DIM * BLOCK_DIM;
+    int numseen = 0;
+    for (int i = block_r; i < block_r + BLOCK_DIM; ++i) {
+        for (int j = block_c; j < block_c + BLOCK_DIM; ++j) {
+            digit_t d = grid[i * DIGITS + j];
+            if (d == 0)
+                continue;
+            if (!seen[d]) {
+                seen[d] = 1;
+                numseen += 1;
+            }
         }
     }
-    return 1;
+    return numseen;
 }
 
-/* T if the row is valid, F otherwise */
-int checkrow(digit_t* grid, int r)
+/*
+Updates seen vector for the given row
+Returns number of new digits seen
+*/
+int checkrow(digit_t* grid, int* seen, int r)
 {
-    static int seen[DIGITS];
-    memset(seen, DIGITS, 0);
-    for (int c = 0; c < DIGITS; ++c) {
-        digit_t d = grid[r * DIGITS + c] - 1;
-        if (seen[d])
-            return 0;
-        seen[d] = 1;
+    int numseen = 0;
+    for (int i = 0; i < DIGITS; ++i) {
+        digit_t d = grid[r * DIGITS + i];
+        if (d == 0)
+            continue;
+        if (!seen[d]) {
+            seen[d] = 1;
+            numseen += 1;
+        }
     }
-    return 1;
+    return numseen;
 }
 
-/* T if the column is valid, F otherwise */
-int checkcol(digit_t* grid, int c)
+/*
+Updates seen vector for the given column
+Returns number of new digits seen
+*/
+int checkcol(digit_t* grid, int* seen, int c)
 {
-    static int seen[DIGITS];
-    memset(seen, DIGITS, 0);
-    for (int r = 0; r < DIGITS; ++r) {
-        digit_t d = grid[r * DIGITS + c] - 1;
-        if (seen[d])
-            return 0;
-        seen[d] = 1;
+    int numseen = 0;
+    for (int i = 0; i < DIGITS; ++i) {
+        digit_t d = grid[i * DIGITS + c];
+        if (d == 0)
+            continue;
+        if (!seen[d]) {
+            seen[d] = 1;
+            numseen += 1;
+        }
     }
-    return 1;
+    return numseen;
+}
+
+/*
+Returns T if a solution can be produced, F otherwise
+*/
+int setcell(digit_t* grid, int idx)
+{
+    // Done
+    if (idx == DIGITS * DIGITS) {
+        return 1;
+    }
+    int r = idx / DIGITS;
+    int c = (idx % DIGITS + DIGITS) % DIGITS;
+    int numseen = 0;
+    int seen[DIGITS + 1];
+    memset(seen, 0, sizeof(int) * (DIGITS + 1));
+    numseen += checkblock(grid, seen, r, c);
+    numseen += checkrow(grid, seen, r);
+    numseen += checkcol(grid, seen, c);
+    while (numseen < DIGITS) {
+        digit_t d;
+        do {
+            d = (rand() % DIGITS + DIGITS) % DIGITS + 1;
+        } while (seen[d]);
+        seen[d] = 1;
+        numseen += 1;
+        // Set and try to make progress
+        grid[idx] = d;
+        if (setcell(grid, idx + 1))
+            return 1;
+    }
+    grid[idx] = 0;
+    return 0;
 }
 
 int main()
 {
     srand(time(NULL));
     digit_t* grid = (digit_t*)malloc(sizeof(digit_t) * (DIGITS * DIGITS));
-    for (int i = 0; i < DIGITS; ++i) {
-        for (int j = 0; j < DIGITS; ++j) {
-            grid[i * DIGITS + j] = (rand() % DIGITS + DIGITS) % DIGITS + 1;
-        }
-    }
+    memset(grid, 0, sizeof(digit_t) * DIGITS * DIGITS);
+    printf("Success? %s\n", setcell(grid, 0) ? "true" : "false");
     printgrid(grid);
-    printf("%s\n", (checkcell(grid, 1, 1) ? "true" : "false"));
     free((void*)grid);
 }
