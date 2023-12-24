@@ -8,6 +8,26 @@
 
 typedef unsigned char digit_t;
 
+void pprintgrid(digit_t* grid)
+{
+    for (int i = 0; i < DIGITS; ++i) {
+        if (i > 0 && i % BLOCK_DIM == 0) {
+            for (int j = 0; j < BLOCK_DIM; ++j) {
+                if (j > 0)
+                    printf(" + ");
+                printf("-----");
+            }
+            printf("\n");
+        }
+        for (int j = 0; j < DIGITS; ++j) {
+            if (j > 0 && j % BLOCK_DIM == 0)
+                printf("| ");
+            printf("%u ", grid[i * DIGITS + j]);
+        }
+        printf("\n");
+    }
+}
+
 void printgrid(digit_t* grid)
 {
     for (int i = 0; i < DIGITS; ++i) {
@@ -118,6 +138,6 @@ int main()
     digit_t* grid = (digit_t*)malloc(sizeof(digit_t) * (DIGITS * DIGITS));
     memset(grid, 0, sizeof(digit_t) * DIGITS * DIGITS);
     printf("Success? %s\n", setcell(grid, 0) ? "true" : "false");
-    printgrid(grid);
+    pprintgrid(grid);
     free((void*)grid);
 }
