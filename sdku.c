@@ -10,19 +10,35 @@ typedef unsigned char digit_t;
 
 void pprintgrid(digit_t* grid)
 {
+    int printwidth = 1;
+    int maxval = 0;
+    for (int i = 0; i < DIGITS * DIGITS; ++i) {
+        if (grid[i] > maxval)
+            maxval = grid[i];
+    }
+    while (maxval > 9) {
+        printwidth += 1;
+        maxval /= 10;
+    }
+
     for (int i = 0; i < DIGITS; ++i) {
         if (i > 0 && i % BLOCK_DIM == 0) {
             for (int j = 0; j < BLOCK_DIM; ++j) {
                 if (j > 0)
                     printf(" + ");
-                printf("-----");
+                int dashes = BLOCK_DIM * printwidth + BLOCK_DIM - 1;
+                while (dashes--)
+                    printf("-");
             }
             printf("\n");
         }
         for (int j = 0; j < DIGITS; ++j) {
             if (j > 0 && j % BLOCK_DIM == 0)
                 printf("| ");
-            printf("%u ", grid[i * DIGITS + j]);
+            int numwidth = printf("%u", grid[i * DIGITS + j]);
+            while (numwidth++ < printwidth)
+                printf(" ");
+            printf(" ");
         }
         printf("\n");
     }
